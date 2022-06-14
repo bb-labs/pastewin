@@ -28,73 +28,73 @@ pastewin_role:
       RoleName: pastewin
       PolicyArn: arn:aws:iam::aws:policy/CloudWatchFullAccess
 
-# pastewin_repo:
-#   list_images:
-#     client: ecr
-#     depends_on:
-#       - pastewin_repo.describe_repositories
-#       - pastewin_image.push
-#     args:
-#       repositoryName: pastewin
-#       filter:
-#         tagStatus: UNTAGGED
-#   batch_delete_image:
-#     client: ecr
-#     depends_on:
-#       - pastewin_repo.list_images
-#     args:
-#       repositoryName: pastewin
-#       imageIds: $(pastewin_repo.list_images.imageIds)
-#   describe_images:
-#     client: ecr
-#     depends_on:
-#       - pastewin_repo.batch_delete_image
-#     args:
-#       repositoryName: pastewin
-#       filter:
-#         tagStatus: TAGGED
-#   describe_repositories:
-#     client: ecr
-#     depends_on:
-#       - pastewin_repo.create_repository
-#     args:
-#       repositoryNames:
-#         - pastewin
-#   create_repository:
-#     client: ecr
-#     args:
-#       repositoryName: pastewin
+pastewin_repo:
+  list_images:
+    client: ecr
+    depends_on:
+      - pastewin_repo.describe_repositories
+      - pastewin_image.push
+    args:
+      repositoryName: pastewin
+      filter:
+        tagStatus: UNTAGGED
+  batch_delete_image:
+    client: ecr
+    depends_on:
+      - pastewin_repo.list_images
+    args:
+      repositoryName: pastewin
+      imageIds: $(pastewin_repo.list_images.imageIds)
+  describe_images:
+    client: ecr
+    depends_on:
+      - pastewin_repo.batch_delete_image
+    args:
+      repositoryName: pastewin
+      filter:
+        tagStatus: TAGGED
+  describe_repositories:
+    client: ecr
+    depends_on:
+      - pastewin_repo.create_repository
+    args:
+      repositoryNames:
+        - pastewin
+  create_repository:
+    client: ecr
+    args:
+      repositoryName: pastewin
 
-# pastewin_image:
-#   get_ecr_password:
-#     client: deployment
-#   get_root:
-#     client: deployment
-#   build:
-#     client: docker.images
-#     depends_on:
-#       - pastewin_image.get_root
-#     args:
-#       tag: pastewin
-#       path: $(pastewin_image.get_root)
-#       dockerfile: Dockerfile
-#   tag:
-#     client: pastewin_image.build.0
-#     depends_on:
-#       - pastewin_image.build
-#       - pastewin_repo.describe_repositories
-#     args:
-#       repository: 718734850255.dkr.ecr.us-west-2.amazonaws.com/pastewin
-#       tag: pastewin
-#   push:
-#     client: docker.images
-#     depends_on:
-#       - pastewin_image.get_ecr_password
-#       - pastewin_image.build
-#       - pastewin_image.tag
-#     args:
-#       repository: 718734850255.dkr.ecr.us-west-2.amazonaws.com/pastewin
-#       tag: pastewin
-#       auth_config:
-#         username: AWS
-#         password: $(pastewin_image.get_ecr_password)
+pastewin_image:
+  get_ecr_password:
+    client: deployment
+  get_root:
+    client: deployment
+  build:
+    client: docker.images
+    depends_on:
+      - pastewin_image.get_root
+    args:
+      tag: pastewin
+      path: $(pastewin_image.get_root)/lambda/paste
+      dockerfile: Dockerfile
+  tag:
+    client: pastewin_image.build.0
+    depends_on:
+      - pastewin_image.build
+      - pastewin_repo.describe_repositories
+    args:
+      repository: 718734850255.dkr.ecr.us-west-2.amazonaws.com/pastewin
+      tag: pastewin
+  push:
+    client: docker.images
+    depends_on:
+      - pastewin_image.get_ecr_password
+      - pastewin_image.build
+      - pastewin_image.tag
+    args:
+      repository: 718734850255.dkr.ecr.us-west-2.amazonaws.com/pastewin
+      tag: pastewin
+      auth_config:
+        username: AWS
+        password: $(pastewin_image.get_ecr_password)
