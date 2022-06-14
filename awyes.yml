@@ -1,4 +1,7 @@
-# Roles
+# -------------------------------------------------------------------
+# roles
+# -------------------------------------------------------------------
+
 pastewin_role:
   get_role:
     client: iam
@@ -27,6 +30,10 @@ pastewin_role:
     args:
       RoleName: pastewin
       PolicyArn: arn:aws:iam::aws:policy/CloudWatchFullAccess
+
+# -------------------------------------------------------------------
+# docker repos
+# -------------------------------------------------------------------
 
 pastewin_repo:
   list_images:
@@ -98,3 +105,49 @@ pastewin_image:
       auth_config:
         username: AWS
         password: $(pastewin_image.get_ecr_password)
+
+# -------------------------------------------------------------------
+# lambdas
+# -------------------------------------------------------------------
+
+pastewin_lambda:
+  get_function:
+    client: lambda
+    depends_on:
+      - pastewin_lambda.create_function
+    args:
+      FunctionName: receive_paste
+  create_function:
+    client: lambda
+    depends_on:
+      - pastewin_role.get_role
+      - pastewin_repo.describe_images
+      - pastewin_image.push
+    args:
+      Timeout: 60
+      MemorySize: 128
+      FunctionName: receive_paste
+      Role: $(pastewin_role.get_role.Role.Arn)
+      PackageType: Image
+      Code:
+        ImageUri: >-
+          718734850255.dkr.ecr.us-west-2.amazonaws.com/pastewin@$(pastewin_repo.describe_images.imageDetails.0.imageDigest)
+  update_function_configuration:
+    client: lambda
+    depends_on:
+      - pastewin_lambda.get_function
+      - pastewin_repo.describe_repositories
+    args:
+      FunctionName: receive_paste
+      Timeout: 60
+      MemorySize: 128
+  update_function_code:
+    client: lambda
+    depends_on:
+      - pastewin_lambda.get_function
+      - pastewin_lambda.update_function_configuration
+      - pastewin_repo.describe_repositories
+    args:
+      FunctionName: receive_paste
+      ImageUri: >-
+        718734850255.dkr.ecr.us-west-2.amazonaws.com/pastewin@$(pastewin_repo.describe_images.imageDetails.0.imageDigest)
