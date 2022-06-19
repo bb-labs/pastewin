@@ -110,7 +110,30 @@ pastewin_image:
 # lambdas
 # -------------------------------------------------------------------
 
+pastewin_lambda_url:
+  create_function_url_config:
+    client: lambda
+    depends_on:
+      - pastewin_lambda.get_function
+    args:
+      FunctionName: receive_paste
+      AuthType: NONE
+      Cors:
+        AllowOrigins:
+          - "*"
+
 pastewin_lambda:
+  add_permission:
+    client: lambda
+    depends_on:
+      - pastewin_lambda.get_function
+    args:
+      FunctionName: receive_paste
+      StatementId: FunctionURLAllowPublicAccess
+      Principal: "*"
+      Action: lambda:InvokeFunctionUrl
+      FunctionUrlAuthType: NONE
+
   get_function:
     client: lambda
     depends_on:
@@ -129,6 +152,9 @@ pastewin_lambda:
       FunctionName: receive_paste
       Role: $(pastewin_role.get_role.Role.Arn)
       PackageType: Image
+      ImageConfig:
+        Command:
+          - app.handler
       Code:
         ImageUri: >-
           718734850255.dkr.ecr.us-west-2.amazonaws.com/pastewin@$(pastewin_repo.describe_images.imageDetails.0.imageDigest)
