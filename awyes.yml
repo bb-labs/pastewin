@@ -13,7 +13,7 @@ pastewin_role:
     client: iam
     args:
       RoleName: pastewin
-      Description: Role for all pastewin lambdas & dynamo db
+      Description: Role for pastewin
       AssumeRolePolicyDocument: >
         {
           "Version": "2012-10-17",
@@ -23,6 +23,8 @@ pastewin_role:
             "Action": "sts:AssumeRole"
           }]
         }
+
+pastewin_role_attach_cloud:
   attach_role_policy:
     client: iam
     depends_on:
@@ -30,6 +32,15 @@ pastewin_role:
     args:
       RoleName: pastewin
       PolicyArn: arn:aws:iam::aws:policy/CloudWatchFullAccess
+
+pastewin_role_attach_s3:
+  attach_role_policy:
+    client: iam
+    depends_on:
+      - pastewin_role.get_role
+    args:
+      RoleName: pastewin
+      PolicyArn: arn:aws:iam::aws:policy/AmazonS3FullAccess
 
 # -------------------------------------------------------------------
 # docker repos
@@ -105,6 +116,41 @@ pastewin_image:
       auth_config:
         username: AWS
         password: $(pastewin_image.get_ecr_password)
+
+# -------------------------------------------------------------------
+# s3
+# -------------------------------------------------------------------
+
+pastewin_bucket:
+  create_bucket:
+    client: s3
+    args:
+      ACL: public-read
+      Bucket: pastewin-pastes
+      CreateBucketConfiguration:
+        LocationConstraint: us-west-2
+  put_bucket_policy:
+    client: s3
+    depends_on:
+      - pastewin_bucket.create_bucket
+    args:
+      Bucket: pastewin-pastes
+      Policy: >
+        {
+          "Id": "Policy1655709303217",
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "Stmt1655709300574",
+              "Action": [
+                "s3:GetObject"
+              ],
+              "Effect": "Allow",
+              "Resource": "arn:aws:s3:::pastewin-pastes/*",
+              "Principal": "*"
+            }
+          ]
+        }
 
 # -------------------------------------------------------------------
 # lambdas
