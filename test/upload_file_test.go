@@ -2,22 +2,18 @@ package test
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"testing"
 )
 
-func TestPingLambda(t *testing.T) {
+func TestUploadFile(t *testing.T) {
 	URL := "https://jzd5pgu3q3axdvxbw6kupn3bg40wbnkz.lambda-url.us-west-2.on.aws/"
 
-	body, _ := json.Marshal(map[string]string{
-		"name":  "Toby",
-		"email": "Toby@example.com",
-	})
-
-	response, err := http.Post(URL, "application/json", bytes.NewBuffer(body))
+	raw, _ := os.ReadFile("/Users/trumanpurnell/Desktop/awyes-main.zip")
+	response, err := http.Post(URL, "application/zip", bytes.NewBuffer([]byte(raw)))
 
 	fmt.Println(err)
 
