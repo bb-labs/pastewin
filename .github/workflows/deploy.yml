@@ -37,11 +37,12 @@ jobs:
             "patch") ;&
             "minor") ;&
             "major")
-              current_version=$(python -c "import awyes; print(awyes.__version__)")
+              current_version=$(python -c "import pastewin; print(pastewin.__version__)")
               new_version=$(python -c "import semver; print(semver.bump_$bump_type('$current_version'))")
 
               echo "Bumping version from $current_version to $new_version"
-              echo "__version__ = \"$new_version\"" > awyes/__init__.py
+              echo "__version__ = \"$new_version\"" > pastewin/__init__.py
+              echo "__bucket__ = \"pastewin-pastes\"" >> pastewin/__init__.py
 
               git config user.name "trumanpurnell"
               git config user.email "truman.purnell@gmail.com"
