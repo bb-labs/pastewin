@@ -1,225 +1,79 @@
-# -------------------------------------------------------------------
-# roles
-# -------------------------------------------------------------------
+# # -------------------------------------------------------------------
+# # roles
+# # -------------------------------------------------------------------
 
-# pastewin_role:
-#   get_role:
-#     client: iam
-#     depends_on:
-#       - pastewin_role.create_role
-#     args:
-#       RoleName: pastewin
-#   create_role:
-#     client: iam
-#     args:
-#       RoleName: pastewin
-#       Description: Role for pastewin
-#       AssumeRolePolicyDocument: >
-#         {
-#           "Version": "2012-10-17",
-#           "Statement": [{
-#             "Effect": "Allow",
-#             "Principal": { "Service": "lambda.amazonaws.com" },
-#             "Action": "sts:AssumeRole"
-#           }]
-#         }
+pastewin_role:
+  get_role:
+    client: iam
+    depends_on:
+      - pastewin_role.create_role
+    args:
+      RoleName: pastewin
+  create_role:
+    client: iam
+    args:
+      RoleName: pastewin
+      Description: Role for pastewin
+      AssumeRolePolicyDocument: >
+        {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": { "Service": "lambda.amazonaws.com" },
+            "Action": "sts:AssumeRole"
+          }]
+        }
 
-# pastewin_role_attach_cloud:
-#   attach_role_policy:
-#     client: iam
-#     depends_on:
-#       - pastewin_role.get_role
-#     args:
-#       RoleName: pastewin
-#       PolicyArn: arn:aws:iam::aws:policy/CloudWatchFullAccess
-
-# pastewin_role_attach_s3:
-#   attach_role_policy:
-#     client: iam
-#     depends_on:
-#       - pastewin_role.get_role
-#     args:
-#       RoleName: pastewin
-#       PolicyArn: arn:aws:iam::aws:policy/AmazonS3FullAccess
-
-# -------------------------------------------------------------------
-# docker repos
-# -------------------------------------------------------------------
-
-pastewin_repo:
-  list_images:
-    client: ecr
+pastewin_role_attach_s3:
+  attach_role_policy:
+    client: iam
     depends_on:
-      # - pastewin_repo.describe_repositories
-      - pastewin_image.push
+      - pastewin_role.get_role
     args:
-      repositoryName: pastewin
-      filter:
-        tagStatus: UNTAGGED
-  batch_delete_image:
-    client: ecr
-    depends_on:
-      - pastewin_repo.list_images
-    args:
-      repositoryName: pastewin
-      imageIds: $(pastewin_repo.list_images.imageIds)
-  describe_images:
-    client: ecr
-    depends_on:
-      - pastewin_repo.batch_delete_image
-    args:
-      repositoryName: pastewin
-      filter:
-        tagStatus: TAGGED
-  # describe_repositories:
-  #   client: ecr
-  #   # depends_on:
-  #   #   - pastewin_repo.create_repository
-  #   args:
-  #     repositoryNames:
-  #       - pastewin
-  # create_repository:
-  #   client: ecr
-  #   args:
-  #     repositoryName: pastewin
-
-pastewin_image:
-  get_ecr_password:
-    client: deployment
-  get_root:
-    client: deployment
-  build:
-    client: docker.images
-    depends_on:
-      - pastewin_image.get_root
-    args:
-      tag: pastewin
-      path: $(pastewin_image.get_root)/lambda/paste
-      dockerfile: Dockerfile
-  tag:
-    client: pastewin_image.build.0
-    depends_on:
-      - pastewin_image.build
-      # - pastewin_repo.describe_repositories
-    args:
-      repository: 718734850255.dkr.ecr.us-west-2.amazonaws.com/pastewin
-      tag: pastewin
-  push:
-    client: docker.images
-    depends_on:
-      - pastewin_image.get_ecr_password
-      - pastewin_image.build
-      - pastewin_image.tag
-    args:
-      repository: 718734850255.dkr.ecr.us-west-2.amazonaws.com/pastewin
-      tag: pastewin
-      auth_config:
-        username: AWS
-        password: $(pastewin_image.get_ecr_password)
+      RoleName: pastewin
+      PolicyArn: arn:aws:iam::aws:policy/AmazonS3FullAccess
 
 # # -------------------------------------------------------------------
 # # s3
 # # -------------------------------------------------------------------
 
-# pastewin_bucket:
-#   create_bucket:
-#     client: s3
-#     args:
-#       ACL: public-read
-#       Bucket: pastewin-pastes
-#       CreateBucketConfiguration:
-#         LocationConstraint: us-west-2
-#   put_bucket_policy:
-#     client: s3
-#     depends_on:
-#       - pastewin_bucket.create_bucket
-#     args:
-#       Bucket: pastewin-pastes
-#       Policy: >
-#         {
-#           "Id": "Policy1655709303217",
-#           "Version": "2012-10-17",
-#           "Statement": [
-#             {
-#               "Sid": "Stmt1655709300574",
-#               "Action": [
-#                 "s3:GetObject"
-#               ],
-#               "Effect": "Allow",
-#               "Resource": "arn:aws:s3:::pastewin-pastes/*",
-#               "Principal": "*"
-#             }
-#           ]
-#         }
-
-# # -------------------------------------------------------------------
-# # lambdas
-# # -------------------------------------------------------------------
-
-# pastewin_lambda_url:
-#   create_function_url_config:
-#     client: lambda
-#     depends_on:
-#       - pastewin_lambda.get_function
-#     args:
-#       FunctionName: receive_paste
-#       AuthType: NONE
-#       Cors:
-#         AllowOrigins:
-#           - "*"
-
-pastewin_lambda:
-  # add_permission:
-  #   client: lambda
-  #   depends_on:
-  #     - pastewin_lambda.get_function
-  #   args:
-  #     FunctionName: receive_paste
-  #     StatementId: FunctionURLAllowPublicAccess
-  #     Principal: "*"
-  #     Action: lambda:InvokeFunctionUrl
-  #     FunctionUrlAuthType: NONE
-
-  get_function:
-    client: lambda
-    # depends_on:
-    # - pastewin_lambda.create_function
+pastewin_bucket:
+  create_bucket:
+    client: s3
     args:
-      FunctionName: receive_paste
-  # create_function:
-  #   client: lambda
-  #   depends_on:
-  #     - pastewin_role.get_role
-  #     - pastewin_repo.describe_images
-  #     - pastewin_image.push
-  #   args:
-  #     Timeout: 60
-  #     MemorySize: 128
-  #     FunctionName: receive_paste
-  #     Role: $(pastewin_role.get_role.Role.Arn)
-  #     PackageType: Image
-  #     ImageConfig:
-  #       Command:
-  #         - app.handler
-  #     Code:
-  #       ImageUri: >-
-  #         718734850255.dkr.ecr.us-west-2.amazonaws.com/pastewin@$(pastewin_repo.describe_images.imageDetails.0.imageDigest)
-  # update_function_configuration:
-  #   client: lambda
-  #   depends_on:
-  #     - pastewin_lambda.get_function
-  #     - pastewin_repo.describe_repositories
-  #   args:
-  #     FunctionName: receive_paste
-  #     Timeout: 60
-  #     MemorySize: 128
-  update_function_code:
-    client: lambda
+      Bucket: pastewin-pastes
+      CreateBucketConfiguration:
+        LocationConstraint: us-west-2
+  put_public_access_block:
+    client: s3
     depends_on:
-      - pastewin_lambda.get_function
-      # - pastewin_lambda.update_function_configuration
-      # - pastewin_repo.describe_repositories
+      - pastewin_bucket.create_bucket
     args:
-      FunctionName: receive_paste
-      ImageUri: >-
-        718734850255.dkr.ecr.us-west-2.amazonaws.com/pastewin@$(pastewin_repo.describe_images.imageDetails.0.imageDigest)
+      Bucket: pastewin-pastes
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: False
+        IgnorePublicAcls: False
+        BlockPublicPolicy: False
+        RestrictPublicBuckets: False
+  put_bucket_policy:
+    client: s3
+    depends_on:
+      - pastewin_bucket.create_bucket
+    args:
+      Bucket: pastewin-pastes
+      Policy: >
+        {
+          "Id": "Policy1655709303217",
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "Stmt1655709300574",
+              "Action": [
+                "s3:GetObject"
+              ],
+              "Effect": "Allow",
+              "Resource": "arn:aws:s3:::pastewin-pastes/*",
+              "Principal": "*"
+            }
+          ]
+        }
