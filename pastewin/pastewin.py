@@ -14,7 +14,7 @@ def upload_file(file_name, object_name):
     :param file_name: File to upload
     :param bucket: Bucket to upload to
     :param object_name: S3 object name. If not specified then file_name is used
-    :return: response, or error
+    :return: None, or error
     """
 
     # If S3 object_name was not specified, use file_name
