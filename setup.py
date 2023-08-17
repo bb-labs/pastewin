@@ -9,6 +9,7 @@ setup(
     description='A package to upload files to public s3 bucket',
     url='https://github.com/bb-labs/pastewin',
     packages=find_packages(),
+    package_data={'pastewin': ['**/*.yml']},
     install_requires=[
         'boto3',
         'awyes'

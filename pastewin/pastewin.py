@@ -18,9 +18,6 @@ def init(bucket_name):
     """
     write_config_to_file(bucket_name)
 
-    print(Path(__file__))
-    print(Path(__file__).parent)
-
     awyes_template = (Path(__file__).parent / "awyes_template.yml").resolve()
 
     with open(awyes_template, 'r') as file:
