@@ -18,7 +18,7 @@ def init(bucket_name):
     """
     write_config_to_file(bucket_name)
 
-    awyes_template = (Path(__file__).parent / "awyes_template.yml").resolve()
+    awyes_template = (Path(__file__) / "awyes_template.yml").resolve()
 
     with open(awyes_template, 'r') as file:
         awyes_yaml = file.read().replace('${BUCKET_NAME}', bucket_name)
