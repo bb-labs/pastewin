@@ -11,6 +11,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         'boto3',
+        'awyes'
     ],
     entry_points={'console_scripts': ['pastewin=pastewin.pastewin:main']},
     classifiers=[

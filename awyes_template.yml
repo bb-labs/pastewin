@@ -2,18 +2,18 @@
 # # roles
 # # -------------------------------------------------------------------
 
-pastewin_role:
+${BUCKET_NAME}_role:
   get_role:
     client: iam
     depends_on:
-      - pastewin_role.create_role
+      - ${BUCKET_NAME}_role.create_role
     args:
-      RoleName: pastewin
+      RoleName: ${BUCKET_NAME}
   create_role:
     client: iam
     args:
-      RoleName: pastewin
-      Description: Role for pastewin
+      RoleName: ${BUCKET_NAME}
+      Description: Role for ${BUCKET_NAME}
       AssumeRolePolicyDocument: >
         {
           "Version": "2012-10-17",
@@ -24,32 +24,32 @@ pastewin_role:
           }]
         }
 
-pastewin_role_attach_s3:
+${BUCKET_NAME}_role_attach_s3:
   attach_role_policy:
     client: iam
     depends_on:
-      - pastewin_role.get_role
+      - ${BUCKET_NAME}_role.get_role
     args:
-      RoleName: pastewin
+      RoleName: ${BUCKET_NAME}
       PolicyArn: arn:aws:iam::aws:policy/AmazonS3FullAccess
 
 # # -------------------------------------------------------------------
 # # s3
 # # -------------------------------------------------------------------
 
-pastewin_bucket:
+${BUCKET_NAME}_bucket:
   create_bucket:
     client: s3
     args:
-      Bucket: pastewin-pastes
+      Bucket: ${BUCKET_NAME}
       CreateBucketConfiguration:
         LocationConstraint: us-west-2
   put_public_access_block:
     client: s3
     depends_on:
-      - pastewin_bucket.create_bucket
+      - ${BUCKET_NAME}_bucket.create_bucket
     args:
-      Bucket: pastewin-pastes
+      Bucket: ${BUCKET_NAME}
       PublicAccessBlockConfiguration:
         BlockPublicAcls: False
         IgnorePublicAcls: False
@@ -58,9 +58,9 @@ pastewin_bucket:
   put_bucket_policy:
     client: s3
     depends_on:
-      - pastewin_bucket.create_bucket
+      - ${BUCKET_NAME}_bucket.create_bucket
     args:
-      Bucket: pastewin-pastes
+      Bucket: ${BUCKET_NAME}
       Policy: >
         {
           "Id": "Policy1655709303217",
@@ -72,7 +72,7 @@ pastewin_bucket:
                 "s3:GetObject"
               ],
               "Effect": "Allow",
-              "Resource": "arn:aws:s3:::pastewin-pastes/*",
+              "Resource": "arn:aws:s3:::${BUCKET_NAME}/*",
               "Principal": "*"
             }
           ]
