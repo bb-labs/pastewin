@@ -1,2 +1,2 @@
 # pastewin
-Pastebin, for winners
+Pastebin, but you foot the bill ;)
