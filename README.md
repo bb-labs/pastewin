@@ -23,6 +23,14 @@ To use PasteWin, you'll need to have AWS credentials set up on your machine. The
 
 PasteWin provides several commands that you can use to upload and share text content. To execute any of these commands, you need to use the `pastewin` command followed by the desired operation.
 
+### Initializing
+
+First you need an S3 bucket, try this:
+
+```bash
+pastewin init <your-bucket-name>
+```
+
 ### Uploading
 
 To upload and get a shareable link, use the `upload` command:
